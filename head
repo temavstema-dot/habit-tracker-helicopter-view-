@@ -1,0 +1,716 @@
+
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Year Habit Tracker 2026</title>
+    <!-- Version 3.1 - Optimized for mobile: 20 columns, 19 rows = all 365 days visible -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0a;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            padding: 15px 10px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        h1 {
+            font-size: 40px;
+            font-weight: 300;
+            letter-spacing: 6px;
+            margin-bottom: 5px;
+        }
+
+        .year-info {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .habits-selector {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .habit-btn {
+            padding: 6px 14px;
+            background: #1a1a1a;
+            border: 2px solid #333;
+            border-radius: 20px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+
+        .habit-btn.active {
+            border-color: var(--habit-color);
+            background: var(--habit-color);
+        }
+
+        .habit-btn:hover {
+            border-color: #555;
+        }
+
+        .add-habit-btn {
+            background: #2a2a2a;
+            border-color: #444;
+        }
+
+        .grid-container {
+            background: #0f0f0f;
+            border-radius: 15px;
+            padding: 15px 10px;
+            margin-bottom: 20px;
+        }
+
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(20, 1fr);
+            gap: 3px;
+            margin-bottom: 15px;
+        }
+
+        .day {
+            aspect-ratio: 1;
+            background: #1a1a1a;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .day:hover {
+            transform: scale(1.2);
+            z-index: 10;
+        }
+
+        .day.completed {
+            background: var(--habit-color, #ff6b35);
+        }
+
+        .day.today {
+            box-shadow: 0 0 0 1px #fff;
+        }
+
+        .day.future {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .progress-info {
+            text-align: center;
+            color: #888;
+            font-size: 14px;
+        }
+
+        .statistics {
+            background: #0f0f0f;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+
+        .statistics h2 {
+            font-size: 24px;
+            font-weight: 300;
+            margin-bottom: 15px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #1a1a1a;
+        }
+
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: #888;
+            font-size: 14px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .streak {
+            color: #ff6b35;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #1a1a1a;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .modal h3 {
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #888;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            background: #0f0f0f;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .color-options {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+        }
+
+        .color-option {
+            aspect-ratio: 1;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+
+        .color-option.selected {
+            border-color: #fff;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #ff6b35;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #ff8555;
+        }
+
+        .btn-secondary {
+            background: #2a2a2a;
+            color: #fff;
+        }
+
+        .btn-secondary:hover {
+            background: #3a3a3a;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 36px;
+                letter-spacing: 4px;
+            }
+
+            .days-grid {
+                grid-template-columns: repeat(20, 1fr);
+                gap: 2px;
+            }
+
+            .grid-container {
+                padding: 12px 8px;
+            }
+            
+            body {
+                padding: 10px 5px;
+            }
+            
+            .progress-info {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>2026</h1>
+            <div class="year-info">Трекер привычек</div>
+        </header>
+
+        <div class="habits-selector" id="habitsSelector">
+            <button class="habit-btn add-habit-btn" onclick="openAddHabitModal()">+ Добавить привычку</button>
+        </div>
+
+        <div class="grid-container">
+            <div class="days-grid" id="daysGrid"></div>
+            <div class="progress-info" id="progressInfo"></div>
+        </div>
+
+        <div class="statistics">
+            <h2>Статистика</h2>
+            <div id="statistics"></div>
+        </div>
+    </div>
+
+    <div class="modal" id="addHabitModal">
+        <div class="modal-content">
+            <h3>Новая привычка</h3>
+            <div class="form-group">
+                <label>Название привычки</label>
+                <input type="text" id="habitName" placeholder="Например: Спорт, Чтение, Медитация">
+            </div>
+            <div class="form-group">
+                <label>Выберите цвет</label>
+                <div class="color-options" id="colorOptions"></div>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="closeAddHabitModal()">Отмена</button>
+                <button class="btn btn-primary" onclick="addHabit()">Добавить</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="editHabitModal">
+        <div class="modal-content">
+            <h3>Редактировать привычку</h3>
+            <div class="form-group">
+                <label>Название привычки</label>
+                <input type="text" id="editHabitName" placeholder="Название">
+            </div>
+            <div class="form-group">
+                <label>Выберите цвет</label>
+                <div class="color-options" id="editColorOptions"></div>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="deleteHabit()" style="background: #d32f2f;">Удалить</button>
+                <button class="btn btn-secondary" onclick="closeEditHabitModal()">Отмена</button>
+                <button class="btn btn-primary" onclick="saveEditHabit()">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const COLORS = [
+            '#ff6b35', '#f7931e', '#fdc82f', '#8bc34a', '#4caf50',
+            '#00bcd4', '#2196f3', '#3f51b5', '#9c27b0', '#e91e63',
+            '#ff5722', '#795548', '#607d8b', '#ff9800', '#cddc39'
+        ];
+
+        let habits = JSON.parse(localStorage.getItem('habits')) || [];
+        let selectedHabitId = null;
+        let selectedColor = COLORS[0];
+
+        const startDate = new Date('2026-01-01');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        function initColorPicker() {
+            const container = document.getElementById('colorOptions');
+            COLORS.forEach(color => {
+                const option = document.createElement('div');
+                option.className = 'color-option';
+                option.style.background = color;
+                if (color === selectedColor) option.classList.add('selected');
+                option.onclick = () => selectColor(color);
+                container.appendChild(option);
+            });
+        }
+
+        function selectColor(color) {
+            selectedColor = color;
+            document.querySelectorAll('.color-option').forEach(opt => {
+                opt.classList.remove('selected');
+                if (opt.style.background === color) {
+                    opt.classList.add('selected');
+                }
+            });
+        }
+
+        function openAddHabitModal() {
+            document.getElementById('addHabitModal').classList.add('active');
+            initColorPicker();
+        }
+
+        function closeAddHabitModal() {
+            document.getElementById('addHabitModal').classList.remove('active');
+            document.getElementById('habitName').value = '';
+        }
+
+        function addHabit() {
+            const name = document.getElementById('habitName').value.trim();
+            if (!name) {
+                alert('Введите название привычки');
+                return;
+            }
+
+            const newHabit = {
+                id: Date.now(),
+                name: name,
+                color: selectedColor,
+                days: {}
+            };
+
+            habits.push(newHabit);
+            selectedHabitId = newHabit.id;
+            saveHabits();
+            closeAddHabitModal();
+            renderHabits();
+            renderGrid();
+            renderStats();
+        }
+
+        function saveHabits() {
+            localStorage.setItem('habits', JSON.stringify(habits));
+        }
+
+        function renderHabits() {
+            console.log('renderHabits called, habits count:', habits.length);
+            console.log('habits:', JSON.stringify(habits));
+            
+            const container = document.getElementById('habitsSelector');
+            container.innerHTML = '';
+
+            habits.forEach(habit => {
+                const wrapper = document.createElement('div');
+                wrapper.style.position = 'relative';
+                wrapper.style.display = 'inline-block';
+
+                const btn = document.createElement('button');
+                btn.className = 'habit-btn';
+                btn.textContent = habit.name;
+                btn.style.setProperty('--habit-color', habit.color);
+                if (habit.id === selectedHabitId) btn.classList.add('active');
+                btn.onclick = () => selectHabit(habit.id);
+                btn.oncontextmenu = (e) => {
+                    e.preventDefault();
+                    openEditHabitModal(habit.id);
+                };
+                btn.ondblclick = () => openEditHabitModal(habit.id);
+                
+                wrapper.appendChild(btn);
+                container.appendChild(wrapper);
+            });
+
+            const addBtn = document.createElement('button');
+            addBtn.className = 'habit-btn add-habit-btn';
+            addBtn.textContent = '+ Добавить';
+            addBtn.onclick = openAddHabitModal;
+            container.appendChild(addBtn);
+            
+            console.log('renderHabits completed');
+        }
+
+        function selectHabit(id) {
+            selectedHabitId = id;
+            renderHabits();
+            renderGrid();
+            renderStats();
+        }
+
+        function renderGrid() {
+            const grid = document.getElementById('daysGrid');
+            grid.innerHTML = '';
+
+            const currentHabit = habits.find(h => h.id === selectedHabitId);
+            const defaultColor = '#666';
+
+            for (let i = 0; i < 365; i++) {
+                const dayDate = new Date(startDate);
+                dayDate.setDate(dayDate.getDate() + i);
+                
+                const day = document.createElement('div');
+                day.className = 'day';
+                
+                const dayKey = dayDate.toISOString().split('T')[0];
+                
+                if (currentHabit) {
+                    day.style.setProperty('--habit-color', currentHabit.color);
+                    
+                    if (currentHabit.days[dayKey]) {
+                        day.classList.add('completed');
+                    }
+                    
+                    if (dayDate.toDateString() === today.toDateString()) {
+                        day.classList.add('today');
+                        day.onclick = () => toggleDay(dayKey);
+                    } else if (dayDate > today) {
+                        day.classList.add('future');
+                    } else {
+                        day.onclick = () => toggleDay(dayKey);
+                    }
+                } else {
+                    // Show empty grid when no habit selected
+                    day.style.setProperty('--habit-color', defaultColor);
+                    if (dayDate.toDateString() === today.toDateString()) {
+                        day.classList.add('today');
+                    }
+                    if (dayDate > today) {
+                        day.classList.add('future');
+                    }
+                }
+                
+                day.title = dayDate.toLocaleDateString('ru-RU', { 
+                    day: 'numeric', 
+                    month: 'long' 
+                });
+                
+                grid.appendChild(day);
+            }
+
+            updateProgress();
+        }
+
+        function toggleDay(dayKey) {
+            const habit = habits.find(h => h.id === selectedHabitId);
+            if (!habit) return;
+
+            if (habit.days[dayKey]) {
+                delete habit.days[dayKey];
+            } else {
+                habit.days[dayKey] = true;
+            }
+
+            saveHabits();
+            renderGrid();
+            renderStats();
+        }
+
+        function updateProgress() {
+            const habit = habits.find(h => h.id === selectedHabitId);
+            const daysPassed = Math.floor((today - startDate) / (1000 * 60 * 60 * 24)) + 1;
+            
+            if (!habit) {
+                document.getElementById('progressInfo').innerHTML = 
+                    `${365 - daysPassed} дней осталось`;
+                return;
+            }
+
+            const completed = Object.keys(habit.days).length;
+            const percentage = Math.round((completed / Math.min(daysPassed, 365)) * 100);
+
+            document.getElementById('progressInfo').innerHTML = 
+                `${365 - daysPassed} дней осталось · ${percentage}% выполнено`;
+        }
+
+        function calculateStreak() {
+            const habit = habits.find(h => h.id === selectedHabitId);
+            if (!habit) return 0;
+
+            let streak = 0;
+            let checkDate = new Date(today);
+
+            while (checkDate >= startDate) {
+                const dayKey = checkDate.toISOString().split('T')[0];
+                if (habit.days[dayKey]) {
+                    streak++;
+                    checkDate.setDate(checkDate.getDate() - 1);
+                } else {
+                    break;
+                }
+            }
+
+            return streak;
+        }
+
+        function renderStats() {
+            const habit = habits.find(h => h.id === selectedHabitId);
+            const stats = document.getElementById('statistics');
+            
+            if (!habit) {
+                stats.innerHTML = `
+                    <div class="stat-row">
+                        <span class="stat-label">Добавьте привычку чтобы начать трекинг</span>
+                        <span class="stat-value">—</span>
+                    </div>
+                `;
+                return;
+            }
+
+            const daysPassed = Math.floor((today - startDate) / (1000 * 60 * 60 * 24)) + 1;
+            const completed = Object.keys(habit.days).length;
+            const streak = calculateStreak();
+            const percentage = Math.round((completed / Math.min(daysPassed, 365)) * 100);
+
+            stats.innerHTML = `
+                <div class="stat-row">
+                    <span class="stat-label">Текущая серия</span>
+                    <span class="stat-value streak">${streak}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Всего выполнено</span>
+                    <span class="stat-value">${completed}</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Процент выполнения</span>
+                    <span class="stat-value">${percentage}%</span>
+                </div>
+            `;
+        }
+
+        let editingHabitId = null;
+        let editSelectedColor = null;
+
+        function openEditHabitModal(habitId) {
+            const habit = habits.find(h => h.id === habitId);
+            if (!habit) return;
+
+            editingHabitId = habitId;
+            editSelectedColor = habit.color;
+
+            document.getElementById('editHabitName').value = habit.name;
+            initEditColorPicker(habit.color);
+            document.getElementById('editHabitModal').classList.add('active');
+        }
+
+        function closeEditHabitModal() {
+            document.getElementById('editHabitModal').classList.remove('active');
+            editingHabitId = null;
+        }
+
+        function initEditColorPicker(currentColor) {
+            const container = document.getElementById('editColorOptions');
+            container.innerHTML = '';
+            COLORS.forEach(color => {
+                const option = document.createElement('div');
+                option.className = 'color-option';
+                option.style.background = color;
+                if (color === currentColor) option.classList.add('selected');
+                option.onclick = () => selectEditColor(color);
+                container.appendChild(option);
+            });
+        }
+
+        function selectEditColor(color) {
+            editSelectedColor = color;
+            document.querySelectorAll('#editColorOptions .color-option').forEach(opt => {
+                opt.classList.remove('selected');
+                if (opt.style.background === color) {
+                    opt.classList.add('selected');
+                }
+            });
+        }
+
+        function saveEditHabit() {
+            const name = document.getElementById('editHabitName').value.trim();
+            if (!name) {
+                alert('Введите название привычки');
+                return;
+            }
+
+            const habit = habits.find(h => h.id === editingHabitId);
+            if (habit) {
+                habit.name = name;
+                habit.color = editSelectedColor;
+                saveHabits();
+                renderHabits();
+                renderGrid();
+                renderStats();
+            }
+
+            closeEditHabitModal();
+        }
+
+        function deleteHabit() {
+            console.log('deleteHabit called, editingHabitId:', editingHabitId);
+            console.log('habits before delete:', JSON.stringify(habits));
+            
+            if (!confirm('Удалить эту привычку? Все данные будут потеряны.')) {
+                console.log('User cancelled');
+                return;
+            }
+
+            // Filter out the habit to delete
+            habits = habits.filter(h => h.id !== editingHabitId);
+            console.log('habits after filter:', JSON.stringify(habits));
+            
+            // Update selected habit
+            if (selectedHabitId === editingHabitId) {
+                selectedHabitId = habits.length > 0 ? habits[0].id : null;
+                console.log('new selectedHabitId:', selectedHabitId);
+            }
+
+            // Save to localStorage
+            localStorage.setItem('habits', JSON.stringify(habits));
+            console.log('saved to localStorage:', localStorage.getItem('habits'));
+            
+            // Close modal and update UI
+            closeEditHabitModal();
+            renderHabits();
+            renderGrid();
+            renderStats();
+            
+            console.log('delete completed, habits count:', habits.length);
+        }
+
+        // Initialize
+        renderHabits();
+        renderGrid();
+        renderStats();
+    </script>
+</body>
+</html>
